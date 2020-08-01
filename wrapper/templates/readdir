@@ -33,4 +33,4 @@ echo ${DIR_NAME} | awk -F/ '{
 
 {{ readdir("/", fs) }}
 
-}'
+}' | sh - | sh -
