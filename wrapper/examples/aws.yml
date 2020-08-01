@@ -1,5 +1,5 @@
 awk_fuse_parser: &awk_fuse_parser |
-    awk 
+    awk '
     function output_fuse_dir(path) {
       return sprintf("ino=1 mode=drwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=1024 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 %s\0", $0) 
     }   
@@ -8,13 +8,11 @@ awk_fuse_parser: &awk_fuse_parser |
     }'
 
 aws_root: &aws_root
-  static:
-    - name: regions
-      type: dir
-    - name: resources
-      type: dir
-    - name: version
-      type: file
+  cmd:
+    - echo regions; echo zones
+
+  parser:  
+    - *awk_fuse_parser
 
 # FIX me
 # https://docs.aws.amazon.com/cli/latest/reference/configservice/list-discovered-resources.html
@@ -30,7 +28,6 @@ aws_regions: &aws_regions
     - aws ec2 describe-regions
   parser:  
     - jq -r '.Regions[].RegionName'
-  fuse_parser: 
     - *awk_fuse_parser
 
 aws_ec2_list: &aws_ec2_list
@@ -38,7 +35,6 @@ aws_ec2_list: &aws_ec2_list
     - aws ec2 describe-instances
   parser:  
     - jq -r '.Reservations[].Instances[].InstanceId'
-  fuse_parser: 
     - *awk_fuse_parser
 
 aws_eks_list: &aws_eks_list
@@ -46,35 +42,33 @@ aws_eks_list: &aws_eks_list
     - aws eks list-clusters
   parser:
     - jq -r '.clusters'
-  fuse_parser: 
     - *awk_fuse_parser
 
 
 
 wrapper_name: aws
 
-# /aws
-"/":
-  # /aws/regions
-  "/regions":
-#    # / aws/regions/us-west-1
-#    "a/[a-z0-9-]+$"
-#      # /aws/regions/eu-central-1/ec2
-#      "a/ec2$":
-#        ls: *aws_ec2_list
-#      # /aws/regions/eu-central-1/eks
-#      "a/eks$"
-#        ls: *aws_eks_list
-#      ls: *aws_resources
-#    ls: *aws_regions
-  ls: *aws_root
-#    
-#  # /aws/resources
-#  "a/resources":
-#    # /aws/resources/ec2
-#    "a/ec2":
-#      ls: *aws_ec2_list
-#    "a/eks":
-#      ls: *aws_eks_list
-#    ls:
-#      ls: *aws_resources
+fs:
+  "/": # /aws
+    "/regions": # /aws/regions
+      # / aws/regions/us-west-1
+      "/[a-z0-9-]+$":
+        # /aws/regions/eu-central-1/ec2
+        "/ec2$":
+          readdir: *aws_ec2_list
+        # /aws/regions/eu-central-1/eks
+        "/eks$":
+          readdir: *aws_eks_list
+        readdir: *aws_resources
+      readdir: *aws_regions
+    readdir: *aws_root
+      
+    # /aws/resources
+    "/resources":
+      # /aws/resources/ec2
+      "/ec2":
+        readdir: *aws_ec2_list
+      "/eks":
+        readdir: *aws_eks_list
+      readdir:
+        readdir: *aws_resources
