@@ -30,8 +30,6 @@ init
 )$"
 } 
 
-ls_templates
-
 export TMP_FILE=`mktemp /tmp/execfuse_wrapper.$$.XXXXXXX.yml`
 cat > ${TMP_FILE} 
 
