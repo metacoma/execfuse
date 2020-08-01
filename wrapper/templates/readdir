@@ -1,0 +1,36 @@
+#!/bin/sh
+{% set readdir_key = "readdir" %}
+set -e
+DIR_NAME=$1
+
+{% macro readdir(parent, fs) %}
+  {% for path in fs %}
+    {% if path != readdir_key %} 
+      {{ readdir(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
+    {% endif %} {# if path != readdir_key #}
+  {% endfor %}
+  if (path ~ /^{{ parent | regex_replace("/", "\/", "g") }}$/) {
+  {% if readdir_key in fs %}
+    {% set dir = fs[readdir_key] %}
+    {% if "cmd" in dir %}
+      printf("export LVL1=\"/\"\n")
+      for (i = 2; i <= NF; i++) {
+        printf("export LVL%d=\"%s\"\n", i, $i)
+      } 
+      {% set cmd = dir["cmd"] | join(" |") %}
+      {% set parser = dir["parser"] | join(" |") %}
+      
+      {% set cmd = "( " + cmd + " )" %} 
+      {% set parser = "( " + parser + " )" %} 
+      printf("echo {{ ( cmd + " | " + parser ) | b64encode }} | base64 -d\n")
+    {% endif %} {# if "cmd" in dir #}
+  {% endif %} {# if readdir_key in fs #}
+  } 
+{%- endmacro %}
+
+echo ${DIR_NAME} | awk -F/ '{
+  path=$0
+
+{{ readdir("/", fs) }}
+
+}'
