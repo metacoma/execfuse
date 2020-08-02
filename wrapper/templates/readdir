@@ -18,7 +18,7 @@ fi
       {{ tree(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
     {% endif %} {# if path != fs_op #}
   {% endfor %}
-  if (path ~ /^{{ parent | regex_replace("/", "\/", "g") }}$/) {
+  if (path ~ /^{{ parent | regex_replace("//", "/", "g") | regex_replace("/", "\/", "g") }}$/) {
   {% if fs_op in fs %}
     {% set dir = fs[fs_op] %}
     {% if "cmd" in dir %}
