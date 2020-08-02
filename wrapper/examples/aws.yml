@@ -3,6 +3,10 @@ awk_fuse_parser: &awk_fuse_parser |
     function output_fuse_dir(path) {
       return sprintf("ino=1 mode=drwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=1024 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 %s\0", $0) 
     }   
+    BEGIN { 
+        #printf("%s", output_fuse_dir(".")) 
+        #printf("%s", output_fuse_dir("..")) 
+    }
     {   
         printf("%s", output_fuse_dir($0)) 
     }'
@@ -52,12 +56,12 @@ fs:
   "/": # /aws
     "/regions": # /aws/regions
       # / aws/regions/us-west-1
-      "/[a-z0-9-]+$":
+      "/[a-z0-9]+":
         # /aws/regions/eu-central-1/ec2
-        "/ec2$":
+        "/ec2":
           readdir: *aws_ec2_list
         # /aws/regions/eu-central-1/eks
-        "/eks$":
+        "/eks":
           readdir: *aws_eks_list
         readdir: *aws_resources
       readdir: *aws_regions

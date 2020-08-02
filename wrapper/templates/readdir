@@ -1,25 +1,29 @@
 #!/bin/sh
 {% set fs_op  = self._TemplateReference__context.name %}
 set -e
-DIR_NAME=$1
+export DIR_NAME=$1
 
-{% macro readdir(parent, fs) %}
+CACHE_NAME="/tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d' '`"
+if [ -f "${CACHE_NAME}" ]; then
+  cat ${CACHE_NAME}
+  echo use cache ${CACHE_NAME} >> /tmp/aws_log
+  exit 0
+fi
+
+
+
+{% macro tree(parent, fs) %}
   {% for path in fs %}
     {% if path != fs_op %} 
-      {{ readdir(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
+      {{ tree(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
     {% endif %} {# if path != fs_op #}
   {% endfor %}
   if (path ~ /^{{ parent | regex_replace("/", "\/", "g") }}$/) {
   {% if fs_op in fs %}
     {% set dir = fs[fs_op] %}
     {% if "cmd" in dir %}
-      printf("export LVL1=\"/\"\n")
-      for (i = 2; i <= NF; i++) {
-        printf("export LVL%d=\"%s\"\n", i, $i)
-      } 
       {% set cmd = dir["cmd"] | join(" |") %}
       {% set parser = dir["parser"] | join(" |") %}
-      
       {% set cmd = "( " + cmd + " )" %} 
       {% set parser = "( " + parser + " )" %} 
       printf("echo {{ ( cmd + " | " + parser ) | b64encode }} | base64 -d\n")
@@ -28,9 +32,16 @@ DIR_NAME=$1
   } 
 {%- endmacro %}
 
-echo ${DIR_NAME} | awk -F/ '{
+echo ${DIR_NAME} | awk -F/ '
+BEGIN {
+  printf("export LVL1=\"/\"\n")
+  for (i = 2; i <= NF; i++) {
+    printf("export LVL%d=\"%s\"\n", i, $i)
+  } 
+} 
+{
   path=$0
 
-{{ readdir("/", fs) }}
+{{ tree("/", fs) }}
 
-}' | sh - | sh -
+}' | sh - | (sh - | tee /tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d" "`)

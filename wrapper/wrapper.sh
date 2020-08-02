@@ -4,7 +4,6 @@ set -ex
 ls_templates() {
   find templates -type f -regextype posix-egrep -regex "^templates/(\
 init
-|xmp\
 |unlink\
 |truncate\
 |getattr\
@@ -47,5 +46,8 @@ ls_templates | xargs -P6 -I{} sh -xce '
   jinja2 -D FILE_NAME=${FILE_NAME} \
     -e jinja2_ansible_filters.AnsibleCoreFiltersExtension ${FILE_PATH} < ${TMP_FILE} > ${COMPILED_DIR}/${FILE_NAME}
 '
+
+chmod +x ${COMPILED_DIR}/*
+
 
 
