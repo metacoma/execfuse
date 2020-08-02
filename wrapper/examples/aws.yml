@@ -13,8 +13,7 @@ awk_fuse_parser: &awk_fuse_parser |
 
 aws_root: &aws_root
   cmd:
-    - echo regions; echo zones
-
+    - echo regions; echo resources
   parser:  
     - *awk_fuse_parser
 
@@ -22,9 +21,14 @@ aws_root: &aws_root
 # https://docs.aws.amazon.com/cli/latest/reference/configservice/list-discovered-resources.html
 # https://github.com/JohannesEbke/aws_list_all
 aws_resources: &aws_resources
-  static:
-    - ec2
-    - eks
+  cmd:
+    - |
+      cat<<EOF
+      ec2
+      eks
+      EOF
+  parser:  
+    - *awk_fuse_parser
   
 
 aws_regions: &aws_regions
@@ -54,25 +58,19 @@ wrapper_name: aws
 
 fs:
   "/": # /aws
-    "/regions": # /aws/regions
-      # / aws/regions/us-west-1
-      "/[a-z0-9]+":
-        # /aws/regions/eu-central-1/ec2
-        "/ec2":
-          readdir: *aws_ec2_list
-        # /aws/regions/eu-central-1/eks
-        "/eks":
-          readdir: *aws_eks_list
-        readdir: *aws_resources
-      readdir: *aws_regions
     readdir: *aws_root
-      
-    # /aws/resources
-    "/resources":
-      # /aws/resources/ec2
-      "/ec2":
-        readdir: *aws_ec2_list
-      "/eks":
-        readdir: *aws_eks_list
-      readdir:
+    "/regions": # /aws/regions
+      readdir: *aws_regions
+      "/[a-z0-9\\-]+": # / aws/regions/us-west-1
         readdir: *aws_resources
+        "/ec2": # /aws/regions/eu-central-1/ec2
+          readdir: *aws_ec2_list
+        "/eks": # /aws/regions/eu-central-1/eks
+          readdir: *aws_eks_list
+      
+    "/resources": # /aws/resources
+      readdir: *aws_resources
+      "/ec2": # /aws/resources/ec2
+        readdir: *aws_ec2_list
+      "/eks": # /aws/resources/eks
+        readdir: *aws_eks_list

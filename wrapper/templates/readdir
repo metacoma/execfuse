@@ -6,7 +6,7 @@ export DIR_NAME=$1
 CACHE_NAME="/tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d' '`"
 if [ -f "${CACHE_NAME}" ]; then
   cat ${CACHE_NAME}
-  echo use cache ${CACHE_NAME} >> /tmp/aws_log
+  echo ${DIR_NAME} use cache ${CACHE_NAME} >> /tmp/aws_log
   exit 0
 fi
 
