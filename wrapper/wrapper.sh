@@ -42,8 +42,10 @@ test -d ${COMPILED_DIR} || mkdir -p ${COMPILED_DIR}
 ls_templates | xargs -P6 -I{} sh -xce '
 
   FILE_PATH={}
-  FILE_NAME=`basename ${FILE_PATH}`
-  jinja2 -e jinja2_ansible_filters.AnsibleCoreFiltersExtension ${FILE_PATH} < ${TMP_FILE} > ${COMPILED_DIR}/${FILE_NAME}
+  export FILE_NAME=`basename ${FILE_PATH}`
+  # self._TemplateReference__context.name instead FILE_NAME variable
+  jinja2 -D FILE_NAME=${FILE_NAME} \
+    -e jinja2_ansible_filters.AnsibleCoreFiltersExtension ${FILE_PATH} < ${TMP_FILE} > ${COMPILED_DIR}/${FILE_NAME}
 '
 
 

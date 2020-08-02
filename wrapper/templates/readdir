@@ -1,17 +1,17 @@
 #!/bin/sh
-{% set readdir_key = "readdir" %}
+{% set fs_op  = self._TemplateReference__context.name %}
 set -e
 DIR_NAME=$1
 
 {% macro readdir(parent, fs) %}
   {% for path in fs %}
-    {% if path != readdir_key %} 
+    {% if path != fs_op %} 
       {{ readdir(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
-    {% endif %} {# if path != readdir_key #}
+    {% endif %} {# if path != fs_op #}
   {% endfor %}
   if (path ~ /^{{ parent | regex_replace("/", "\/", "g") }}$/) {
-  {% if readdir_key in fs %}
-    {% set dir = fs[readdir_key] %}
+  {% if fs_op in fs %}
+    {% set dir = fs[fs_op] %}
     {% if "cmd" in dir %}
       printf("export LVL1=\"/\"\n")
       for (i = 2; i <= NF; i++) {
@@ -24,7 +24,7 @@ DIR_NAME=$1
       {% set parser = "( " + parser + " )" %} 
       printf("echo {{ ( cmd + " | " + parser ) | b64encode }} | base64 -d\n")
     {% endif %} {# if "cmd" in dir #}
-  {% endif %} {# if readdir_key in fs #}
+  {% endif %} {# if fs_op in fs #}
   } 
 {%- endmacro %}
 
