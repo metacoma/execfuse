@@ -40,16 +40,22 @@ aws_regions: &aws_regions
 
 aws_ec2_list: &aws_ec2_list
   cmd:
-    - aws ec2 describe-instances
+    - 
+      aws 
+      `test -n "${region}" && echo "--region ${region}"`
+      ec2 describe-instances
   parser:  
     - jq -r '.Reservations[].Instances[].InstanceId'
     - *awk_fuse_parser
 
 aws_eks_list: &aws_eks_list
   cmd:
-    - aws eks list-clusters
+    - 
+      aws 
+      `test -n "${region}" && echo "--region ${region}"`
+      eks list-clusters
   parser:
-    - jq -r '.clusters'
+    - jq -r '.clusters[]'
     - *awk_fuse_parser
 
 
@@ -62,6 +68,7 @@ fs:
     "/regions": # /aws/regions
       readdir: *aws_regions
       "/[a-z0-9\\-]+": # / aws/regions/us-west-1
+        name: region
         readdir: *aws_resources
         "/ec2": # /aws/regions/eu-central-1/ec2
           readdir: *aws_ec2_list
@@ -72,5 +79,5 @@ fs:
       readdir: *aws_resources
       "/ec2": # /aws/resources/ec2
         readdir: *aws_ec2_list
-      "/eks": # /aws/resources/eks
+      "eks": # /aws/resources/eks
         readdir: *aws_eks_list

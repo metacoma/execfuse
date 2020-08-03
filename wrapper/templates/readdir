@@ -12,14 +12,32 @@ fi
 
 
 
-{% macro tree(parent, fs) %}
+{% macro tree(parent_path, fs, parent_fs) %}
+
+  {% if fs is mapping and parent_fs is not none %}
+    {% set dummy=fs.__setitem__("__parent", parent_fs) %}
+  {% endif %}
+
   {% for path in fs %}
+    {# skip virtual parent ref #}
+    {% if path == "__parent" %}
+      {% continue %} 
+    {% endif %} {# if path == "__parent" #}
     {% if path != fs_op %} 
-      {{ tree(parent + "/" + path if (parent != "/") else path, fs[path]) }} 
+      {{ tree(parent_path + "/" + path if (parent_path != "/") else path, fs[path], fs) }} 
+      {% continue %}
     {% endif %} {# if path != fs_op #}
   {% endfor %}
-  if (path ~ /^{{ parent | regex_replace("//", "/", "g") | regex_replace("/", "\/", "g") }}$/) {
+  if (path ~ /^{{ parent_path | regex_replace("//", "/", "g") | regex_replace("/", "\/", "g") }}$/) {
   {% if fs_op in fs %}
+    {# set context #} 
+    path_lvl=NF-1
+    {% if fs["__parent"] is mapping and "name" in fs['__parent'] %}
+    printf("echo export \"%s\"=\"%s\"\n", "{{ fs['__parent'].name }}", $path_lvl)
+    path_lvl=path_lvl-1  
+    {% endif %}
+
+
     {% set dir = fs[fs_op] %}
     {% if "cmd" in dir %}
       {% set cmd = dir["cmd"] | join(" |") %}
@@ -42,6 +60,6 @@ BEGIN {
 {
   path=$0
 
-{{ tree("/", fs) }}
+{{ tree("/", fs, none) }}
 
-}' | sh - | (sh - | tee /tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d" "`)
+}' | sh - | tee /tmp/aws_debug.txt | (sh - | tee /tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d" "`)
