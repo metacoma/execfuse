@@ -1,0 +1,12 @@
+#!/bin/sh
+if [ "$1" = "/result" ]; then
+	  cat<<EOF
+https://www.youtube.com/watch?v=v5hiG345tC4
+https://www.youtube.com/watch?v=X3WXUWUz3Y4
+https://www.youtube.com/watch?v=8-FAUCCjBbk
+https://www.youtube.com/watch?v=XtCJpf00sn8
+EOF
+else
+	    exit 1
+fi
+
