@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo xxx1 > /tmp/xxx
+cat >> /tmp/xxx
+#if [ "$1" = "/ctl" ]; then
+#    cat > /tmp/create_me
+#else
+#    exit 1
+#fi
+

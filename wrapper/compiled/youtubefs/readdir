@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -e
+export DIR_NAME=$1
+
+CACHE_NAME="/tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d' '`"
+if [ -f "${CACHE_NAME}" ]; then
+  cat ${CACHE_NAME}
+  echo ${DIR_NAME} use cache ${CACHE_NAME} >> /tmp/aws_log
+  exit 0
+fi
+
+
+
+
+
+echo ${DIR_NAME} | awk -F/ '
+BEGIN {
+  printf("export LVL1=\"/\"\n")
+  for (i = 2; i <= NF; i++) {
+    printf("export LVL%d=\"%s\"\n", i, $i)
+  } 
+} 
+{
+  path=$0
+
+
+
+  
+
+  
+    
+     
+     
+      
+
+  
+    
+  
+
+  
+    
+     
+     
+  
+    
+    
+      
+  if (path ~ /^\/$/) {
+  
+     
+    path_lvl=NF-1
+    
+
+
+    
+    
+      
+      
+       
+       
+      printf("echo KCBjYXQ8PEVPRgpjdGwKcmVzdWx0CkVPRgogKSB8ICggYXdrICcKZnVuY3Rpb24gb3V0cHV0X2Z1c2VfZGlyKHBhdGgpIHsKICByZXR1cm4gc3ByaW50ZigiaW5vPTEgbW9kZT1kcnd4cnd4cnd4IG5saW5rPTEgdWlkPTAgZ2lkPTAgcmRldj0wIHNpemU9MTAyNCBibGtzaXplPTUxMiBibG9ja3M9MiBhdGltZT0wIG10aW1lPTAgY3RpbWU9MCAlc1wwIiwgJDApIAp9ICAgCmZ1bmN0aW9uIG91dHB1dF9mdXNlX2ZpbGUocGF0aCkgewogIHJldHVybiBzcHJpbnRmKCJpbm89MSBtb2RlPS1yd3hyd3hyd3ggbmxpbms9MSB1aWQ9MCBnaWQ9MCByZGV2PTAgc2l6ZT0xMDI0IGJsa3NpemU9NTEyIGJsb2Nrcz0yIGF0aW1lPTAgbXRpbWU9MCBjdGltZT0wICVzXDAiLCAkMCkgCn0gICAKQkVHSU4geyAKICAgICNwcmludGYoIiVzIiwgb3V0cHV0X2Z1c2VfZGlyKCIuIikpIAogICAgI3ByaW50ZigiJXMiLCBvdXRwdXRfZnVzZV9kaXIoIi4uIikpIAp9CnsgICAKICAgIHByaW50ZigiJXMiLCBvdXRwdXRfZnVzZV9maWxlKCQwKSkgCn0nCiAp | base64 -d\n")
+     
+   
+  } 
+      
+  if (path ~ /^\/$/) {
+   
+  }
+
+}' | sh - | tee /tmp/aws_debug.txt | (sh - | tee /tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d" "`)
