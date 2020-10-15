@@ -1,8 +1,8 @@
 all: execfuse
 
-CFLAGS=-O2 -ggdb -Wall
+CFLAGS=-O2 -ggdb -Wall -D_FILE_OFFSET_BITS=64
 
-FILES=execfuse.c chunked_buffer.c execute_script.c
+FILES=execfuse.c chunked_buffer.c execute_script.c 
 HEADERS=chunked_buffer.h execute_script.h
 
 execfuse: ${FILES} ${HEADERS}
