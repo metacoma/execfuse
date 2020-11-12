@@ -2,6 +2,9 @@
 {% set fs_op  = self._TemplateReference__context.name %}
 set -e
 export DIR_NAME=$1
+export PAYLOAD_TMP_FILE=`mktemp /tmp/write_payload_XXXXXXXX`
+cat > $PAYLOAD_TMP_FILE
+
 
 CACHE_NAME="/tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d' '`"
 #if [ -f "${CACHE_NAME}" ]; then
@@ -50,6 +53,7 @@ echo {{ fs_op }} $DIR_NAME >> /tmp/aws_debug
   {% endif %} {# if fs_op in fs #}
   } 
 {%- endmacro %}
+
 
 echo ${DIR_NAME} | awk -F/ '
 BEGIN {
