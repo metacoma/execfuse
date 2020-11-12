@@ -21,11 +21,18 @@ slsfs_root: &slsfs_root
   parser:  
     - *awk_fuse_parser
 
-slsfs_root: &slsfs_getattr_root
+dir: &dir
   cmd:
-    - echo funcs; echo ctl;
+    - echo
   parser:  
     - echo 'ino=1 mode=drwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=0 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 '
+
+
+file: &file
+  cmd:
+    - echo
+  parser:  
+    - echo 'ino=1 mode=-rwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=0 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 '
 
 slsfs_ctl: &slsfs_ctl
   cmd:
@@ -45,8 +52,14 @@ wrapper_name: sls
 fs:
   "/": # /slsfs
     readdir: *slsfs_root
-    getattr: *slsfs_getattr_root
+    getattr: *dir
     "/funcs": # /slsfs/funcs
       readdir:  *slsfs_funcs
+      getattr:  *dir
+      "/.*":
+        getattr:  *file
     "/ctl": # /slsfs/ctl
       readdir:  *slsfs_ctl
+      getattr: *dir
+      "/.*":
+        getattr:  *file
