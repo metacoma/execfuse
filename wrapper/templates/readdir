@@ -4,12 +4,13 @@ set -e
 export DIR_NAME=$1
 
 CACHE_NAME="/tmp/cache_`echo ${DIR_NAME} | md5sum - | cut -f1 -d' '`"
-if [ -f "${CACHE_NAME}" ]; then
-  cat ${CACHE_NAME}
-  echo ${DIR_NAME} use cache ${CACHE_NAME} >> /tmp/aws_log
-  exit 0
-fi
+#if [ -f "${CACHE_NAME}" ]; then
+#  cat ${CACHE_NAME}
+#  echo ${DIR_NAME} use cache ${CACHE_NAME} >> /tmp/aws_log
+#  exit 0
+#fi
 
+echo {{ fs_op }} $DIR_NAME >> /tmp/aws_debug
 
 
 {% macro tree(parent_path, fs, parent_fs) %}
@@ -23,7 +24,7 @@ fi
     {% if path == "__parent" %}
       {% continue %} 
     {% endif %} {# if path == "__parent" #}
-    {% if path != fs_op %} 
+    {% if path != fs_op and path[:1] == "/" %} 
       {{ tree(parent_path + "/" + path if (parent_path != "/") else path, fs[path], fs) }} 
       {% continue %}
     {% endif %} {# if path != fs_op #}

@@ -1,0 +1,52 @@
+awk_fuse_parser: &awk_fuse_parser |
+    awk '
+    function output_fuse_dir(path) {
+      return sprintf("ino=1 mode=drwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=1024 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 %s\n", path) 
+    }   
+    BEGIN { 
+        printf("%s", output_fuse_dir(".")) 
+        printf("%s", output_fuse_dir("..")) 
+    }
+    {   
+      printf("%s", output_fuse_dir($0)) 
+    }' | xargs -I{} sh -c "printf '{}\0'"
+
+printf_parser: &printf_parser
+  xargs -I{} sh -c "printf 'ino=1 mode=drwxr-xr-x nlink=4 uid=0 gid=0 rdev=0 size=1224 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 {}\0'"
+  
+
+slsfs_root: &slsfs_root
+  cmd:
+    - echo funcs; echo ctl;
+  parser:  
+    - *awk_fuse_parser
+
+slsfs_root: &slsfs_getattr_root
+  cmd:
+    - echo funcs; echo ctl;
+  parser:  
+    - echo 'ino=1 mode=drwxr-xr-x nlink=1 uid=0 gid=0 rdev=0 size=0 blksize=512 blocks=2 atime=0 mtime=0 ctime=0 '
+
+slsfs_ctl: &slsfs_ctl
+  cmd:
+    - echo kubeless; echo fission
+  parser:  
+    - *awk_fuse_parser
+
+slsfs_funcs: &slsfs_funcs
+  cmd:
+    - kubeless function list -o json | jq -r '.[].metadata.name'
+  parser:  
+    - *awk_fuse_parser
+
+
+wrapper_name: sls
+
+fs:
+  "/": # /slsfs
+    readdir: *slsfs_root
+    getattr: *slsfs_getattr_root
+    "/funcs": # /slsfs/funcs
+      readdir:  *slsfs_funcs
+    "/ctl": # /slsfs/ctl
+      readdir:  *slsfs_ctl
