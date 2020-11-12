@@ -47,6 +47,41 @@ slsfs_funcs: &slsfs_funcs
     - *awk_fuse_parser
 
 
+kubeless_func_types: &kubeless_func_types
+  cmd:
+    - echo python; echo nodejs
+  parser:  
+    - *awk_fuse_parser
+
+kubeless_new_python_func: &kubeless_w_ctl_file
+  cmd:
+    - echo xxxx | tee /tmp/ffffff
+  parser:
+    - cat
+
+kubeless_new_python_func: &kubeless_new_python_func
+  cmd:
+    - >
+      export TEMP_DIR=`mktemp -d /tmp/kubeless_XXXXXXX`; 
+      cd $TEMP_DIR;
+      export FUNC_NAME=python-`date +%s`;
+      sed -i'' "s/hello/$FUNC_NAME/g" serverless.yml handler.py;
+      sls create --template kubeless-python --name $FUNC_NAME;
+      sls plugin install --name serverless-kubeless;
+      npm install;
+      sls deploy;
+  parser:
+    - cat
+
+kubeless_func_call: &kubeless_func_call
+  cmd:
+    - >
+      FUNC_NAME="`basename $DIR_NAME`";
+      kubeless function call "$FUNC_NAME"
+  parser:
+    - cat
+
+
 wrapper_name: sls
 
 fs:
@@ -54,12 +89,25 @@ fs:
     readdir: *slsfs_root
     getattr: *dir
     "/funcs": # /slsfs/funcs
-      readdir:  *slsfs_funcs
+      readdir:  *slsfs_ctl
       getattr:  *dir
-      "/.*":
-        getattr:  *file
+      "/kubeless": # /slsfs/funcs/kubeless/
+        readdir:  *slsfs_funcs
+        getattr:  *dir
+        "/.*":
+          getattr:  *file
+          read_file: *kubeless_func_call
+      "/fission": # /slsfs/funcs/fission/
+        getattr:  *dir
     "/ctl": # /slsfs/ctl
       readdir:  *slsfs_ctl
       getattr: *dir
-      "/.*":
-        getattr:  *file
+      "/kubeless":
+        readdir:  *kubeless_func_types
+        getattr:  *dir
+        "/python": 
+          getattr: *file
+          write_file: *kubeless_new_python_func
+        "/nodejs": 
+          getattr: *file
+          write_file: *kubeless_w_ctl_file 
